@@ -7,13 +7,36 @@ import { TodoElement } from './Todo';
 import { UserWarning } from './UserWarning';
 import classNames from 'classnames';
 
+type FilterStatus = 'all' | 'active' | 'completed';
+
 export const App: React.FC = () => {
   const todoInput = useRef<HTMLInputElement>(null);
 
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [showedTodos, setShowedTodos] = useState<Todo[]>([]);
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [title, setTitle] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const activeTodos = todos.filter(todo => !todo.completed);
+  const completedTodos = todos.filter(todo => todo.completed);
+  const itemsLeft = activeTodos.length;
+
+  const handleAll = () => {
+    setShowedTodos(todos);
+    setFilterStatus('all');
+  };
+
+  const handleActive = () => {
+    setShowedTodos(activeTodos);
+    setFilterStatus('active');
+  };
+
+  const handleCompleted = () => {
+    setShowedTodos(completedTodos);
+    setFilterStatus('completed');
+  };
 
   const handleFocus = () => {
     if (todoInput.current) {
@@ -21,13 +44,23 @@ export const App: React.FC = () => {
     }
   };
 
+  const hideError = () => {
+    setTimeout(() => {
+      setErrorMessage('');
+    }, 3000);
+  };
+
   useEffect(() => {
     setLoading(true);
 
     getTodos()
-      .then(setTodos)
+      .then(result => {
+        setTodos(result);
+        setShowedTodos(result);
+      })
       .catch(error => {
         setErrorMessage('Unable to load todos');
+        hideError();
         throw error;
       })
       .finally(() => {
@@ -53,9 +86,7 @@ export const App: React.FC = () => {
         .catch(error => {
           setErrorMessage('Unable to add a todo');
           handleFocus();
-          setTimeout(() => {
-            setErrorMessage('');
-          }, 3000);
+          hideError();
           throw error;
         })
         .finally(() => {
@@ -63,9 +94,7 @@ export const App: React.FC = () => {
         });
     } else {
       setErrorMessage('Title should not be empty');
-      setTimeout(() => {
-        setErrorMessage('');
-      }, 3000);
+      hideError();
     }
   };
 
@@ -113,7 +142,7 @@ export const App: React.FC = () => {
 
         <section className="todoapp__main" data-cy="TodoList">
           {/* This is a completed todo */}
-          {todos.map(todo => (
+          {showedTodos.map(todo => (
             <TodoElement key={todo.id} todo={todo} loading={loading} />
           ))}
         </section>
@@ -122,31 +151,40 @@ export const App: React.FC = () => {
         {todos.length !== 0 && (
           <footer className="todoapp__footer" data-cy="Footer">
             <span className="todo-count" data-cy="TodosCounter">
-              3 items left
+              {itemsLeft} items left
             </span>
 
             {/* Active link should have the 'selected' class */}
             <nav className="filter" data-cy="Filter">
               <a
                 href="#/"
-                className="filter__link selected"
+                className={classNames('filter__link', {
+                  selected: filterStatus === 'all',
+                })}
                 data-cy="FilterLinkAll"
+                onClick={handleAll}
               >
                 All
               </a>
 
               <a
                 href="#/active"
-                className="filter__link"
+                className={classNames('filter__link', {
+                  selected: filterStatus === 'active',
+                })}
                 data-cy="FilterLinkActive"
+                onClick={handleActive}
               >
                 Active
               </a>
 
               <a
                 href="#/completed"
-                className="filter__link"
+                className={classNames('filter__link', {
+                  selected: filterStatus === 'completed',
+                })}
                 data-cy="FilterLinkCompleted"
+                onClick={handleCompleted}
               >
                 Completed
               </a>
