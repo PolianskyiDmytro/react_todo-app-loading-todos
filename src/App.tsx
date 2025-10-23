@@ -9,6 +9,7 @@ import { Header } from './components/Header/Header';
 import { Footer } from './components/Footer/Footer';
 import { Error } from './components/Error/Error';
 import { FilterStatus } from './types/FilterStatus';
+import { ErrorType } from './types/ErrorType';
 
 export const App: React.FC = () => {
   const todoInput = useRef<HTMLInputElement>(null);
@@ -20,7 +21,9 @@ export const App: React.FC = () => {
   );
   const [title, setTitle] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<ErrorType>(
+    ErrorType.NoError,
+  );
 
   const activeTodos = todos.filter(todo => !todo.completed);
   const completedTodos = todos.filter(todo => todo.completed);
@@ -49,7 +52,7 @@ export const App: React.FC = () => {
 
   const hideError = () => {
     setTimeout(() => {
-      setErrorMessage('');
+      setErrorMessage(ErrorType.NoError);
     }, 3000);
   };
 
@@ -63,7 +66,7 @@ export const App: React.FC = () => {
         handleFocus();
       })
       .catch(error => {
-        setErrorMessage('Unable to load todos');
+        setErrorMessage(ErrorType.LoadTodosError);
         hideError();
         throw error;
       })
@@ -85,7 +88,7 @@ export const App: React.FC = () => {
           setTodos([...todos, response]);
         })
         .catch(error => {
-          setErrorMessage('Unable to add a todo');
+          setErrorMessage(ErrorType.AddTodoError);
           handleFocus();
           hideError();
           throw error;
@@ -95,18 +98,18 @@ export const App: React.FC = () => {
           setTitle('');
         });
     } else {
-      setErrorMessage('Title should not be empty');
+      setErrorMessage(ErrorType.EmptyTodoTitleError);
       hideError();
     }
   };
 
   const handleTitleChange = (value: string) => {
     setTitle(value);
-    setErrorMessage('');
+    setErrorMessage(ErrorType.NoError);
   };
 
   const handleRemoveError = () => {
-    setErrorMessage('');
+    setErrorMessage(ErrorType.NoError);
 
     handleFocus();
   };
