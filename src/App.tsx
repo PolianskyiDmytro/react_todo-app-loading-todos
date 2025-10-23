@@ -11,6 +11,7 @@ export const App: React.FC = () => {
   const todoInput = useRef<HTMLInputElement>(null);
 
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [title, setTitle] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
 
@@ -39,10 +40,10 @@ export const App: React.FC = () => {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (todoInput.current?.value) {
+    if (title.trim().length > 0) {
       setLoading(true);
 
-      addTodo(todoInput.current?.value)
+      addTodo(title.trim())
         .then((response: Todo) => {
           setTodos([...todos, response]);
           if (todoInput.current) {
@@ -66,6 +67,11 @@ export const App: React.FC = () => {
         setErrorMessage('');
       }, 3000);
     }
+  };
+
+  const handleTitleChange = (value: string) => {
+    setTitle(value);
+    setErrorMessage('');
   };
 
   const handleRemoveError = () => {
@@ -99,7 +105,8 @@ export const App: React.FC = () => {
               type="text"
               className="todoapp__new-todo"
               placeholder="What needs to be done?"
-              onChange={() => setErrorMessage('')}
+              value={title}
+              onChange={event => handleTitleChange(event.target.value)}
             />
           </form>
         </header>
